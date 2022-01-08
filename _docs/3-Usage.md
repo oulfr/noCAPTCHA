@@ -258,5 +258,28 @@ if ($validator->fails()) {
     // Redirect back or throw an error
 }
 ```
+#### Laravel Fortify:
+to integrate the captcha in laravel fortify add this to your service provider FortifyServiceProvider:
 
+```php
+public function boot()
+    {
+    ...
+      Fortify::authenticateUsing(function ($request) {
+            if (!$this->isAuthenticateUsing) {
+                $this->isAuthenticateUsing = true;
+                $request->validate([
+                    'g-recaptcha-response' => ['required', new CaptchaRule],
+                ]);
+            }
+            $validated = Auth::validate($credentials = [
+                'email' => $request->email,
+                'password' => $request->password
+            ]);
+            return $validated ? Auth::getProvider()->retrieveByCredentials($credentials) : null;
+        });
+    }
+```
+dont forget to declare the isAuthenticateUsing in your FortifyServiceProvider, there is actually a bug https://github.com/laravel/fortify/issues/339,
+the authenticateUsing method is called twice and the google dont allow twice validation for same request
 > For more advanced usage, check the [official recaptcha documentation](https://developers.google.com/recaptcha/intro).
